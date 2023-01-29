@@ -3,7 +3,10 @@ package com.germant.springPractice.controller;
 import com.germant.springPractice.model.Person;
 import com.germant.springPractice.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,35 +16,45 @@ import java.util.Collection;
 import java.util.List;
 
 @RestController
+@CacheConfig(cacheNames = "persons")
 public class PersonController implements UserDetails {
+    public static final String ALL_PERSONS = "allPersons";
+
     @Autowired
     PersonService personService;
+
+    @Autowired
+    CacheManager cacheManager;
+
     @GetMapping("/getById/{userId}")
-    @Cacheable(value = "persons", key="#userId")
-    public Person getById(@PathVariable Long userId) {
+    @Cacheable(key = "#userId")
+    public Person getById(@PathVariable Integer userId) {
         return personService.getPerson(Long.valueOf(userId));
     }
 
     @GetMapping("/findAll")
-    @Cacheable("persons")
+    @Cacheable
     public List<Person> findAll() {
+        cacheManager.getCache("persons");
          return personService.getAllPersons();
     }
 
-    @PostMapping("/save/{name}/{id}")
-    public Person save(@PathVariable String name, @PathVariable Integer id) {
-        return personService.addPerson(name, id);
+    @PostMapping("/save/{name}/{userId}")
+    @CacheEvict(allEntries = true)
+    public Person save(@PathVariable String name, @PathVariable Integer userId) {
+        return personService.addPerson(name, Long.valueOf(userId));
     }
 
-    @PostMapping("/update/{id}/{name}")
-    public Person update(@PathVariable Integer id, @PathVariable String name) {
-        return personService.updatePerson(id, name);
+    @CacheEvict(allEntries = true)
+    @PostMapping("/update/{userId}/{name}")
+    public Person update(@PathVariable Integer userId, @PathVariable String name) {
+        return personService.updatePerson(Long.valueOf(userId), name);
     }
 
-    @DeleteMapping("/delete/{id}")
-    @CacheEvict(value = "persons", key= "#id")
-    public String delete(@PathVariable Integer id) {
-        return personService.deleteById(Long.valueOf(id));
+    @DeleteMapping("/delete/{userId}")
+    @CacheEvict(allEntries = true)
+    public Person delete(@PathVariable Integer userId) {
+        return personService.deleteById(Long.valueOf(userId));
     }
 
     @Override

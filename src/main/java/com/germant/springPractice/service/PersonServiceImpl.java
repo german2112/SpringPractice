@@ -17,7 +17,6 @@ public class PersonServiceImpl implements PersonService {
     PersonRepository personRepository;
 
     @Override
-    @Cacheable(value = "persons", key="#userId")
     public Person getPerson(@PathVariable Long userId) {
         return personRepository.findById(userId).orElseThrow(() ->
                 new PersonAlreadyExistException("Person with id = " + userId +" does not exist"));
@@ -30,7 +29,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Person addPerson(@PathVariable String name, @PathVariable Integer id) {
+    public Person addPerson(@PathVariable String name, @PathVariable Long id) {
         Person existingPerson = personRepository.findById(id).orElse(null);
         if(existingPerson == null) {
             Person newPerson = new Person(id ,name);
@@ -41,7 +40,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Person updatePerson(@PathVariable Integer id, @PathVariable String name) {
+    public Person updatePerson(@PathVariable Long id, @PathVariable String name) {
         Person existingPerson = personRepository.findById(id).orElse(null);
         if(existingPerson == null) {
             throw new NoSuchPersonExistException("Person with id = " + id + " does not exist");
@@ -53,13 +52,13 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public String deleteById(Long id) {
+    public Person deleteById(Long id) {
         Person existingPerson = personRepository.findById(id).orElse(null);
         if(existingPerson == null) {
             throw new NoSuchPersonExistException("Person with id = " + id + " does not exist");
         } else {
             personRepository.deleteById(id);
-            return "Success";
+            return existingPerson;
         }
     }
 }

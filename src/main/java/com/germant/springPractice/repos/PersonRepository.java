@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface PersonRepository extends CrudRepository<Person, Long> {
     List<Person> findAll();
 
-    Optional<Person> findById(Integer aLong);
+    Optional<Person> findById(Long aLong);
 
     Person save(Person person);
 
