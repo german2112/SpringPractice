@@ -1,14 +1,16 @@
 package com.germant.springPractice.service;
 
+import com.germant.springPractice.dto.PersonRegistrationDTO;
 import com.germant.springPractice.exception.NoSuchPersonExistException;
 import com.germant.springPractice.exception.PersonAlreadyExistException;
 import com.germant.springPractice.model.Person;
+import com.germant.springPractice.model.Role;
 import com.germant.springPractice.repos.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -17,7 +19,7 @@ public class PersonServiceImpl implements PersonService {
     PersonRepository personRepository;
 
     @Override
-    public Person getPerson(@PathVariable Long userId) {
+    public Person getPerson(Long userId) {
         return personRepository.findById(userId).orElseThrow(() ->
                 new PersonAlreadyExistException("Person with id = " + userId +" does not exist"));
     }
@@ -29,18 +31,20 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Person addPerson(@PathVariable String name, @PathVariable Long id) {
-        Person existingPerson = personRepository.findById(id).orElse(null);
+    public Person addPerson(PersonRegistrationDTO personRegistrationDTO) {
+        Person existingPerson = personRepository.findByName(personRegistrationDTO.getName()).orElse(null);
         if(existingPerson == null) {
-            Person newPerson = new Person(id ,name);
+            Person newPerson = new Person(personRegistrationDTO.getName()
+                    , personRegistrationDTO.getPassword(),
+                    List.of(new Role("USER_ROLE")));
             return personRepository.save(newPerson);
         }else{
-            throw new PersonAlreadyExistException("The person with id = " + id + " already exists");
+            throw new PersonAlreadyExistException("The person with name = " + personRegistrationDTO.getName() + " already exists");
         }
     }
 
     @Override
-    public Person updatePerson(@PathVariable Long id, @PathVariable String name) {
+    public Person updatePerson(Long id, String name) {
         Person existingPerson = personRepository.findById(id).orElse(null);
         if(existingPerson == null) {
             throw new NoSuchPersonExistException("Person with id = " + id + " does not exist");

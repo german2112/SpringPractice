@@ -1,5 +1,6 @@
 package com.germant.springPractice.controller;
 
+import com.germant.springPractice.dto.PersonRegistrationDTO;
 import com.germant.springPractice.model.Person;
 import com.germant.springPractice.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +40,10 @@ public class PersonController implements UserDetails {
          return personService.getAllPersons();
     }
 
-    @PostMapping("/save/{name}/{userId}")
+    @PostMapping("/save")
     @CacheEvict(allEntries = true)
-    public Person save(@PathVariable String name, @PathVariable Integer userId) {
-        return personService.addPerson(name, Long.valueOf(userId));
+    public Person save(@RequestBody PersonRegistrationDTO personRegistrationDTO) {
+        return personService.addPerson(personRegistrationDTO);
     }
 
     @CacheEvict(allEntries = true)

@@ -1,6 +1,6 @@
-/*
 package com.germant.springPractice.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+/*
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -19,9 +20,11 @@ import java.io.IOException;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Component
+@RequiredArgsConstructor
 public class JWTAuthFilter extends OncePerRequestFilter { //Each request is going to pass first from this layer
 
-    UserDetailsService userDetailsService;
+    private final JWTUtils jwtUtils;
+    private final UserDetailsService userDetailsService;
     @Override
     public void doFilterInternal(
             HttpServletRequest request,
@@ -38,11 +41,10 @@ public class JWTAuthFilter extends OncePerRequestFilter { //Each request is goin
         }
 
         jwtToken = authHeader.substring(7); //If the Authorization field is valid then we take the bearer token within it, in the authorization string, it always starts from index 7
-        userEmail = "something"; // TODO to be implemented
+        userEmail = jwtUtils.extractUsername(jwtToken); //Get the username assigned to the token that was passed in the header
         if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) { //Validate that the userEmail is not null and that the user is not already authenticated
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail); //Retrieve user Details with the given username or in this case with the user email
-            final boolean isTokenValid; // TODO to be implemented
-            if(isTokenValid) { //Validate that the token of the user is valid, if so, give the user a token
+            if(jwtUtils.validateToken(jwtToken, userDetails)) { //Validate that the token of the user is valid, if so, give the user a token
                 UsernamePasswordAuthenticationToken authToken = //Create the token of the authenticated user
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); //Fill the details of the Token with the request (set the token with more information about the request)
